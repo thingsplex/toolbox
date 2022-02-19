@@ -49,6 +49,14 @@ services:
     environment:
       - TZ=Europe/Oslo
 
+  mqtt:
+    image: eclipse-mosquitto:2.0.14
+    restart: unless-stopped
+    networks:
+      - tplex-net
+    volumes:
+      - /var/lib/mosquitto/config:/mosquitto/config     
+
 
 volumes:
   influxdb1: {}
