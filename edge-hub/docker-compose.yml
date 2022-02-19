@@ -1,0 +1,62 @@
+version: '3'
+services:
+  
+  influxdb1:
+    image: influxdb:1.7.11-alpine
+    restart: unless-stopped
+    networks:
+      - tplex-net
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb1:/var/lib/influxdb
+
+  ecollector:
+    image: thingsplex/ecollector:latest
+    restart: unless-stopped
+    networks:
+      - tplex-net
+    environment:
+      - MQTT_USERNAME=set_your_username
+      - MQTT_PASSWORD=set_your_password
+      - MQTT_URI=tcp://set_mqtt_broker_ip:1884
+    volumes:
+      - ecollector:/thingsplex/ecollector/data
+    depends_on:
+      - "influxdb1"
+
+  tibber-ad:
+    image: thingsplex/tibber-ad:latest
+    restart: unless-stopped
+    networks:
+      - tplex-net
+    environment:
+      - MQTT_USERNAME=set_your_username
+      - MQTT_PASSWORD=set_your_password
+      - MQTT_URI=tcp://set_mqtt_broker_ip:1884
+      - HOME_ID=set_tibber_home_id
+      - TOKEN=set_tibber_auth_token
+    volumes:
+      - tibber:/thingsplex/tibber/data
+  
+  ha-core:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    restart: unless-stopped
+    privileged: true
+    network_mode: host
+    volumes:
+      - /var/lib/homeassistant:/config  
+    environment:
+      - TZ=Europe/Oslo
+
+
+volumes:
+  influxdb1: {}
+  ecollector: {}
+  tibber: {}
+  ha-core: {}
+
+networks:
+  tplex-net:
+    driver: bridge
+    external: false
